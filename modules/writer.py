@@ -58,8 +58,22 @@ class Writer:
     def __CreateWorker(self):
         pass
 
-    def __DestroyWorkers(self):
-        pass
+    @staticmethod
+    def __DestroyWorkers():
+        worker_names = ObjectParser.GetObjectNames(LoadBalancer.workers.values(), checkbox_data=True)
+        questions = [
+            {
+                'type': 'checkbox',
+                'name': 'workers_to_destroy',
+                'message': 'Select workers to destroy',
+                'choices': worker_names,
+            }
+        ]
+        answers = prompt.prompt(questions)
+
+        for worker in answers['workers_to_destroy']:
+            worker = ObjectParser.GetClassObjectByName(LoadBalancer.workers.values(), worker)
+            LoadBalancer.workers.pop(worker.id)
 
     @staticmethod
     def __ChangeWorkersStates():
