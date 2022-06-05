@@ -3,7 +3,8 @@ import os
 from inquirer2 import prompt
 
 from modules.load_balancer import LoadBalancer
-from utils.color import in_color, Color, print_in_color, cursor
+from utils.color import *
+from utils.object_parser import ObjectParser
 
 
 class Writer:
@@ -35,8 +36,8 @@ class Writer:
                 'choices': choices,
             }
         ]
-        answers = prompt.prompt(questions)
 
+        answers = prompt.prompt(questions)
         self.__ExecuteCleanMethod(self.__functions[answers['user_input']])
 
     @staticmethod
@@ -60,8 +61,30 @@ class Writer:
     def __DestroyWorkers(self):
         pass
 
-    def __ChangeWorkersStates(self):
-        pass
+    @staticmethod
+    def __ChangeWorkersStates():
+        worker_names = ObjectParser.GetObjectNames(LoadBalancer.workers.values(), checkbox_data=True)
+        questions = [
+            {
+                'type': 'checkbox',
+                'name': 'statuses',
+                'message': 'Manage workers:',
+                'choices': worker_names
+            }
+        ]
+        answers = prompt.prompt(questions)
+
+        workers = []
+        for worker in answers['statuses']:
+            workers.append(ObjectParser.GetClassObjectByName(LoadBalancer.workers.values(), worker))
+
+        Writer.__UpdateWorkerStates(workers)
+
+    @staticmethod
+    def __UpdateWorkerStates(statuses):
+        for worker in LoadBalancer.workers.values():
+            if worker in statuses:
+                worker.SwitchState()
 
     def __Close(self):
         pass
