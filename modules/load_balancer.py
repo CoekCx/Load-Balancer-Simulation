@@ -6,27 +6,16 @@ class LoadBalancer:
     buffer = []
     workers = {}
 
-    @staticmethod
-    def GetAvailableWorker():
-        # TODO: Implement
-        #  Implement
-        pass
-
-    @staticmethod
-    def GetAllAvailableWorkers():
-        # TODO: Implement
-        #  Implement
-        pass
-
-    @staticmethod
-    def ReceiveData(data_entry):
+    def ReceiveData(self, data_entry):
         LoadBalancer.buffer.append(data_entry)
         if len(LoadBalancer.buffer) < BUFFER_SIZE:
             return
 
-        LoadBalancer.ProcessData()
+        self.ProcessData()
 
-    @staticmethod
-    def ProcessData():
+    def ProcessData(self):
         for data_entry in LoadBalancer.buffer:
             pass  # Process data with worker here when it is implemented
+
+    def GetWorker(self):
+        pass

@@ -5,12 +5,6 @@ class Worker:
         self.__active = active
         self.busy = False
 
-    @staticmethod
-    def SelectMeter():
-        # TODO: Implement
-        #  Implement
-        pass
-
     def AddMeterConsumptions(self, meter_consumptions):
         pass
 
