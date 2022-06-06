@@ -60,3 +60,4 @@ class Database:
                 Database.CreateTable()
             finally:
                 cur.close()
+                
