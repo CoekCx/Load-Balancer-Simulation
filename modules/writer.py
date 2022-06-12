@@ -1,6 +1,10 @@
+import threading
+import time
+
 from inquirer2 import prompt
 
-from constants import time
+import constants.time
+from factories.worker_factory import WorkerFactory
 from models.meter import Meter
 from models.meter_consumption import DataPoint
 from modules.load_balancer import LoadBalancer
@@ -11,6 +15,8 @@ from utils.validation import Validate
 
 
 class Writer:
+    stop_showing_workers = False
+
     def __init__(self, id):
         self.id = id
         self.active = False
@@ -35,22 +41,37 @@ class Writer:
             {
                 'type': 'list',
                 'name': 'user_input',
-                'message': f"|System>>Writer {self.id}>",
+                'message': f'{in_color(f"|System>", Color.PURPLE)}{in_color(f">Writer {self.id}>", Color.BLUE)}',
                 'choices': choices,
             }
         ]
-
         answers = prompt.prompt(questions)
+
         self.__ExecuteCleanMethod(self.__functions[answers['user_input']])
 
-    @staticmethod
-    def __ShowWorkerStatuses():
-        if len(LoadBalancer.workers) == 0:
-            print_in_color('No workers to show', Color.RED)
-        for worker in LoadBalancer.workers.values():
-            print(worker)
-        cursor()
+    def __ShowWorkerStatuses(self):
+        new_thread = threading.Thread(target=self.__ViewWorkers)
+        Worker.update_view = True
+        new_thread.start()
         input()
+        Writer.stop_showing_workers = True
+
+    @staticmethod
+    def __ViewWorkers():
+        Writer.stop_showing_workers = False
+        while not Writer.stop_showing_workers:
+            if Worker.update_view:
+                os.system('cls' if os.name == 'nt' else 'clear')
+                if len(LoadBalancer.workers) == 0:
+                    print_in_color('No workers to show', Color.RED)
+
+                for worker in LoadBalancer.workers.values():
+                    print(worker.__str__(show_color=True, show_activity=True, show_availability=True))
+
+                cursor()
+                time.sleep(0.1)
+                Worker.update_view = False
+            time.sleep(0.2)
 
     def __SendData(self):
         worker = LoadBalancer.GetAvailableWorker()
@@ -116,21 +137,48 @@ class Writer:
                 'type': 'list',
                 'name': 'month',
                 'message': 'Data point month',
-                'choices': time.months
+                'choices': constants.time.months
             }
         ]
         answers = prompt.prompt(questions)
         new_data_entry = DataPoint(meter.id, int(answers['value']), answers['month'])
         return new_data_entry
 
-    def __CreateWorker(self):
-        pass
-
-    def __DestroyWorkers(self):
-        pass
+    @staticmethod
+    def __CreateWorker():
+        questions = [
+            {
+                'type': 'input',
+                'name': 'worker_amount',
+                'message': 'How many workers do you want to create',
+                'validate': lambda x: True
+                if Validate.ValidateIntValue(x, more_than=True, limit=0)
+                else 'Invalid amount of workers to create'
+            }
+        ]
+        answers = prompt.prompt(questions)
+        WorkerFactory.MakeWorker(int(answers['worker_amount']))
+        LoadBalancer.workers = dict(sorted(LoadBalancer.workers.items()))
+        print_message('Workers created', clear_screen=True)
 
     @staticmethod
-    def __ChangeWorkersStates():
+    def __DestroyWorkers():
+        worker_names = ObjectParser.GetObjectNames(LoadBalancer.workers.values(), checkbox_data=True)
+        questions = [
+            {
+                'type': 'checkbox',
+                'name': 'workers_to_destroy',
+                'message': 'Select workers to destroy',
+                'choices': worker_names,
+            }
+        ]
+        answers = prompt.prompt(questions)
+
+        for worker in answers['workers_to_destroy']:
+            worker = ObjectParser.GetClassObjectByName(LoadBalancer.workers.values(), worker)
+            LoadBalancer.workers.pop(worker.id)
+
+    def __ChangeWorkersStates(self):
         worker_names = ObjectParser.GetObjectNames(LoadBalancer.workers.values(), checkbox_data=True)
         questions = [
             {
@@ -146,7 +194,7 @@ class Writer:
         for worker in answers['statuses']:
             workers.append(ObjectParser.GetClassObjectByName(LoadBalancer.workers.values(), worker))
 
-        Writer.__UpdateWorkerStates(workers)
+        self.__UpdateWorkerStates(workers)
 
     @staticmethod
     def __UpdateWorkerStates(statuses):
@@ -155,9 +203,17 @@ class Writer:
                 worker.SwitchState()
 
     def __Close(self):
-        pass
+        self.active = False
 
-    @staticmethod
-    def __ExecuteCleanMethod(method):
+    def __ExecuteCleanMethod(self, method):
         os.system('cls' if os.name == 'nt' else 'clear')
-        method()
+        try:
+            method()
+        except KeyboardInterrupt or TypeError:
+            self.Execute()
+
+    def __str__(self, show_info_in_color=False):
+        if show_info_in_color:
+            return in_color(f"Writer {self.id}", Color.BLUE)
+        else:
+            return f'Writer {self.id}'
