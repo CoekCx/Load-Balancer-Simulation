@@ -1,5 +1,8 @@
+from modules.system_handler import SystemHandler
+
+
 def main():
-    pass
+    SystemHandler.Execute()
 
 
 if __name__ == '__main__':

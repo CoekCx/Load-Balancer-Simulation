@@ -1,6 +1,8 @@
 class DatabaseAnalytics:
-    def ProvideCityPerMonthReport(self):
+    @staticmethod
+    def ProvideCityPerMonthReport():
         pass
 
-    def ProvideMeterPerMonthReport(self):
+    @staticmethod
+    def ProvideMeterPerMonthReport():
         pass
