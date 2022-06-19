@@ -41,7 +41,7 @@ class Writer:
             {
                 'type': 'list',
                 'name': 'user_input',
-                'message': f'"|System>Writer {self.id}>"',
+                'message': f"|System>Writer {self.id}>",
                 'choices': choices,
             }
         ]
@@ -216,7 +216,7 @@ class Writer:
         except KeyboardInterrupt or TypeError:
             self.Execute()
 
-    def __str__(self, show_info_in_color=False):
+    def __str__(self, show_info_in_color=False):  # pragma: no cover
         if show_info_in_color:
             return in_color(f"Writer {self.id}", Color.BLUE)
         else:
