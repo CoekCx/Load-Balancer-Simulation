@@ -21,22 +21,22 @@ class LoadBalancer:
 
         os.system('cls' if os.name == 'nt' else 'clear')
         print_message('Data is being sent')
-        new_thread = threading.Thread(target=LoadBalancer.__ProcessData)
+        new_thread = threading.Thread(target=LoadBalancer.ProcessData)
         new_thread.start()
         return True
 
     @staticmethod
     def GetWorker():
-        worker = LoadBalancer.__CheckForAvailableWorker()
+        worker = LoadBalancer.CheckForAvailableWorker()
         if not isinstance(worker, Worker):
-            worker = LoadBalancer.__CheckForInactivateWorker()
+            worker = LoadBalancer.CheckForInactivateWorker()
             if isinstance(worker, Worker):
                 worker.TurnOn()
 
         return worker
 
     @staticmethod
-    def GetAllAvailableWorkers():
+    def GetAllAvailableWorkers():  # pragma: no cover
         available_workers = list(
             (worker for worker in LoadBalancer.workers.values() if worker.IsActive() and not worker.busy))
         if available_workers:
@@ -61,12 +61,12 @@ class LoadBalancer:
             return available_workers
 
     @staticmethod
-    def GetAvailableWorker():
-        available_worker = LoadBalancer.__CheckForAvailableWorker()
+    def GetAvailableWorker():  # pragma: no cover
+        available_worker = LoadBalancer.CheckForAvailableWorker()
         if isinstance(available_worker, Worker):
             return available_worker
 
-        available_worker = LoadBalancer.__CheckForInactivateWorker()
+        available_worker = LoadBalancer.CheckForInactivateWorker()
         if not isinstance(available_worker, Worker):
             print_error('No available workers')
             return
@@ -87,20 +87,20 @@ class LoadBalancer:
             return available_worker
 
     @staticmethod
-    def __CheckForAvailableWorker():
+    def CheckForAvailableWorker():
         for worker in LoadBalancer.workers.values():
             if worker.IsActive() and not worker.busy:
                 return worker
 
     @staticmethod
-    def __CheckForInactivateWorker():
+    def CheckForInactivateWorker():
         for worker in LoadBalancer.workers.values():
             if not worker.IsActive():
                 return worker
 
     @staticmethod
-    def __ProcessData():
-        worker = LoadBalancer.__CheckForAvailableWorker()
+    def ProcessData():
+        worker = LoadBalancer.CheckForAvailableWorker()
         if not isinstance(worker, Worker):
             print_error('No available workers\nCancelled sending data and deleted last entry', clear_screen=True)
             LoadBalancer.buffer.pop()
