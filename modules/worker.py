@@ -14,54 +14,53 @@ from utils.object_parser import ObjectParser
 class Worker:
     update_view = False
 
-    def __init__(self, id, database: Database, active=False):
+    def __init__(self, id, active=False):
         self.id = id
-        self.__database = database
         self.__active = active
         self.busy = False
         self.thread = None
         self.__actions = {
-            'AddMeterConsumption': self.__ProcessMeterConsumption,
-            'AddMeterConsumptions': self.__AddMeterConsumptions,
-            'AddMeter': self.__ProcessMeterAdd,
-            'UpdateMeter': self.__ProcessMeterUpdate,
-            'DeleteMeter': self.__ProcessMeterDelete
+            'AddMeterConsumption': self.ProcessMeterConsumption,
+            'AddMeterConsumptions': self.AddMeterConsumptions,
+            'AddMeter': self.ProcessMeterAdd,
+            'UpdateMeter': self.ProcessMeterUpdate,
+            'DeleteMeter': self.ProcessMeterDelete
         }
 
-    def ProcessWorkerAction(self, action, args):
+    def ProcessWorkerAction(self, action, args):  # pragma: no cover
         self.thread = threading.Thread(target=self.__actions[action], args=args)
         self.thread.start()
 
-    def __AddMeterConsumptions(self, meter_consumptions):
+    def AddMeterConsumptions(self, meter_consumptions):
         for meter_consumption in meter_consumptions:
-            self.__ProcessMeterConsumption(meter_consumption)
+            self.ProcessMeterConsumption(meter_consumption)
 
-    def __ProcessMeterConsumption(self, datapoint):
+    def ProcessMeterConsumption(self, datapoint):
         self.StateChange(is_busy=True, reload_view=True)
         time.sleep(randint(LOWER_TIME_LIMIT, UPPER_TIME_LIMIT))
         Database.AddMeterConsumption(datapoint)
         self.StateChange(is_busy=False, reload_view=True)
 
-    def __ProcessMeterAdd(self, meter):
+    def ProcessMeterAdd(self, meter):
         self.StateChange(is_busy=True, reload_view=True)
         time.sleep(randint(LOWER_TIME_LIMIT, UPPER_TIME_LIMIT))
         Database.AddMeter(meter)
         self.StateChange(is_busy=False, reload_view=True)
 
-    def __ProcessMeterUpdate(self, meter):
+    def ProcessMeterUpdate(self, meter):
         self.StateChange(is_busy=True, reload_view=True)
         time.sleep(randint(LOWER_TIME_LIMIT, UPPER_TIME_LIMIT))
         Database.UpdateMeter(meter)
         self.StateChange(is_busy=False, reload_view=True)
 
-    def __ProcessMeterDelete(self, meter):
+    def ProcessMeterDelete(self, meter):
         self.StateChange(is_busy=True, reload_view=True)
         time.sleep(randint(LOWER_TIME_LIMIT, UPPER_TIME_LIMIT))
         Database.DeleteMeter(meter)
         self.StateChange(is_busy=False, reload_view=True)
 
     @staticmethod
-    def GetMetersKeys():
+    def GetMetersKeys():  # pragma: no cover
         return Database.GetMeterKeys()
 
     @staticmethod
@@ -74,7 +73,7 @@ class Worker:
         return meters
 
     @staticmethod
-    def SelectCity(message=''):
+    def SelectCity(message=''):  # pragma: no cover
         results = Database.GetAllCities()
         if not results:
             print_error('There is no city data')
@@ -99,7 +98,7 @@ class Worker:
         if city != '...':
             return city
 
-    def SelectMeter(self, message='Select meter', show_meter_info=False):
+    def SelectMeter(self, message='Select meter'):  # pragma: no cover
         meters = self.GetAllMeters()
         if not meters:
             print_error('There are no existing meters')
@@ -119,7 +118,7 @@ class Worker:
         answers = prompt.prompt(questions)
 
         meter = ObjectParser.GetClassObjectByName(meters, answers['meter'])
-        if meter != '...':
+        if meter is not None:
             return meter
 
     def IsActive(self):
@@ -146,7 +145,7 @@ class Worker:
             return True
         return False
 
-    def __str__(self, show_color=False, show_activity=False, show_availability=False):
+    def __str__(self, show_color=False, show_activity=False, show_availability=False):  # pragma: no cover
         if self.IsActive():
             active = in_color('Active\t', Color.GREEN)
         else:
