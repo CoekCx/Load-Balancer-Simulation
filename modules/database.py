@@ -1,4 +1,3 @@
-from threading import Lock
 from constants.sql import Queries
 from models.meter import Meter
 from models.meter_consumption import DataPoint
@@ -11,19 +10,19 @@ class Database:
 
     @staticmethod
     def AddMeter(meter: Meter):
-        Database.__ProcessQuery(Queries.ADD_METER_QUERY(meter), commit=True)
+        Database.ProcessQuery(Queries.ADD_METER_QUERY(meter), commit=True)
 
     @staticmethod
     def UpdateMeter(meter):
-        Database.__ProcessQuery(Queries.UPDATE_METER_QUERY(meter), commit=True)
+        Database.ProcessQuery(Queries.UPDATE_METER_QUERY(meter), commit=True)
 
     @staticmethod
     def DeleteMeter(meter):
-        Database.__ProcessQuery(Queries.DELETE_METER_QUERY(meter), commit=True)
+        Database.ProcessQuery(Queries.DELETE_METER_QUERY(meter), commit=True)
 
     @staticmethod
     def GetMeterKeys():
-        results = Database.__ProcessQuery(Queries.GET_METER_KEYS_QUERY, fetchall=True)
+        results = Database.ProcessQuery(Queries.GET_METER_KEYS_QUERY, fetchall=True)
 
         keys = []
         for result in results:
@@ -33,15 +32,15 @@ class Database:
 
     @staticmethod
     def GetAllMeters():
-        return Database.__ProcessQuery(Queries.GET_ALL_METERS_QUERY, fetchall=True)
+        return Database.ProcessQuery(Queries.GET_ALL_METERS_QUERY, fetchall=True)
 
     @staticmethod
     def AddMeterConsumption(meter_consumption: DataPoint):
-        Database.__ProcessQuery(Queries.ADD_METER_CONSUMPTION_QUERY(meter_consumption), commit=True)
+        Database.ProcessQuery(Queries.ADD_METER_CONSUMPTION_QUERY(meter_consumption), commit=True)
 
     @staticmethod
     def GetMeterConsumptionByMeter(meter_id):
-        results = Database.__ProcessQuery(Queries.GET_METER_CONSUMPTION_BY_METER_QUERY(meter_id), fetchall=True)
+        results = Database.ProcessQuery(Queries.GET_METER_CONSUMPTION_BY_METER_QUERY(meter_id), fetchall=True)
 
         meter_consumptions = []
         for result in results:
@@ -51,7 +50,7 @@ class Database:
 
     @staticmethod
     def GetMeterConsumptionByCity(city):
-        results = Database.__ProcessQuery(Queries.GET_METER_CONSUMPTION_BY_CITY_QUERY(city), fetchall=True)
+        results = Database.ProcessQuery(Queries.GET_METER_CONSUMPTION_BY_CITY_QUERY(city), fetchall=True)
 
         meter_consumptions = []
         for result in results:
@@ -61,22 +60,21 @@ class Database:
 
     @staticmethod
     def GetAllCities():
-        return Database.__ProcessQuery(Queries.GET_ALL_CITIES_QUERY, fetchall=True)
+        return Database.ProcessQuery(Queries.GET_ALL_CITIES_QUERY, fetchall=True)
 
     @staticmethod
-    def __ProcessQuery(query, commit=False, fetchall=False, fetchone=False):
-        with Lock():
-            results = None
-            cur = Database.connection.cursor()
-            cur.execute(query)
-            if commit:
-                cur.execute('commit')
-            if fetchall:
-                results = cur.fetchall()
-            elif fetchone:
-                results = cur.fetchone()
-            cur.close()
-            return results
+    def ProcessQuery(query, commit=False, fetchall=False, fetchone=False):
+        results = None
+        cur = Database.connection.cursor()
+        cur.execute(query)
+        if commit:
+            cur.execute('commit')
+        if fetchall:
+            results = cur.fetchall()
+        elif fetchone:
+            results = cur.fetchone()
+        cur.close()
+        return results
 
     @staticmethod
     def CreateTable(create_meters_table=True, create_meters_consumption_table=True):
