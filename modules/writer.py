@@ -21,43 +21,43 @@ class Writer:
         self.id = id
         self.active = False
         self.__functions = {
-            'Show worker statuses': self.__ShowWorkerStatuses,
-            'Send data using Load Balancer': self.__SendData,
+            'Show worker statuses': self.ShowWorkerStatuses,
+            'Send data using Load Balancer': self.SendData,
             'Send data manually': self.__ManuallySendData,
             'Create worker': self.__CreateWorker,
             'Destroy workers': self.__DestroyWorkers,
             'Manage workers': self.__ChangeWorkersStates,
-            'Close writer': self.__Close
+            'Close writer': self.Close
         }
 
     def Execute(self):
         self.active = True
-        self.__ExecuteCleanMethod(self.__UserPrompt)
+        self.ExecuteCleanMethod(self.__UserPrompt)
 
-    def __UserPrompt(self):
+    def __UserPrompt(self):  # pragma: no cover
         choices = ['Show worker statuses', 'Send data using Load Balancer', 'Send data manually', 'Create worker',
                    'Destroy workers', 'Manage workers', 'Close writer']
         questions = [
             {
                 'type': 'list',
                 'name': 'user_input',
-                'message': f'{in_color(f"|System>", Color.PURPLE)}{in_color(f">Writer {self.id}>", Color.BLUE)}',
+                'message': f'"|System>Writer {self.id}>"',
                 'choices': choices,
             }
         ]
         answers = prompt.prompt(questions)
 
-        self.__ExecuteCleanMethod(self.__functions[answers['user_input']])
+        self.ExecuteCleanMethod(self.__functions[answers['user_input']])
 
-    def __ShowWorkerStatuses(self):
-        new_thread = threading.Thread(target=self.__ViewWorkers)
+    def ShowWorkerStatuses(self):
+        new_thread = threading.Thread(target=self.ViewWorkers)
         Worker.update_view = True
         new_thread.start()
+        time.sleep(0.1)
         input()
         Writer.stop_showing_workers = True
 
-    @staticmethod
-    def __ViewWorkers():
+    def ViewWorkers(self):
         Writer.stop_showing_workers = False
         while not Writer.stop_showing_workers:
             if Worker.update_view:
@@ -73,21 +73,21 @@ class Writer:
                 Worker.update_view = False
             time.sleep(0.2)
 
-    def __SendData(self):
+    def SendData(self):
         worker = LoadBalancer.GetAvailableWorker()
         if not isinstance(worker, Worker):
             return
 
-        new_data_entry = self.__InputDataEntry(worker)
+        new_data_entry = self.InputDataEntry(worker)
         if not isinstance(new_data_entry, DataPoint):
             return
 
         if LoadBalancer.ReceiveData(data_entry=new_data_entry):
-            self.__ShowWorkerStatuses()
+            self.ShowWorkerStatuses()
         else:
             print_message(f'Sent: {new_data_entry}', clear_screen=True)
 
-    def __ManuallySendData(self):
+    def __ManuallySendData(self):  # pragma: no cover
         available_workers = LoadBalancer.GetAllAvailableWorkers()
         if not available_workers:
             return
@@ -112,7 +112,7 @@ class Writer:
         worker = ObjectParser.GetClassObjectByName(available_workers, answers['worker'])
         if not worker.IsActive():
             worker.TurnOn()
-        new_data_entry = self.__InputDataEntry(worker)
+        new_data_entry = self.InputDataEntry(worker)
         if not isinstance(new_data_entry, DataPoint):
             return
 
@@ -120,7 +120,7 @@ class Writer:
         print_message(f'Sent: {new_data_entry}', clear_screen=True)
 
     @staticmethod
-    def __InputDataEntry(worker):
+    def InputDataEntry(worker):  # pragma: no cover
         meter = worker.SelectMeter()
         if not isinstance(meter, Meter):
             return
@@ -145,7 +145,7 @@ class Writer:
         return new_data_entry
 
     @staticmethod
-    def __CreateWorker():
+    def __CreateWorker():  # pragma: no cover
         questions = [
             {
                 'type': 'input',
@@ -161,9 +161,11 @@ class Writer:
         LoadBalancer.workers = dict(sorted(LoadBalancer.workers.items()))
         print_message('Workers created', clear_screen=True)
 
-    @staticmethod
-    def __DestroyWorkers():
+    def __DestroyWorkers(self):  # pragma: no cover
         worker_names = ObjectParser.GetObjectNames(LoadBalancer.workers.values(), checkbox_data=True)
+        if not worker_names:
+            return
+
         questions = [
             {
                 'type': 'checkbox',
@@ -178,8 +180,11 @@ class Writer:
             worker = ObjectParser.GetClassObjectByName(LoadBalancer.workers.values(), worker)
             LoadBalancer.workers.pop(worker.id)
 
-    def __ChangeWorkersStates(self):
+    def __ChangeWorkersStates(self):  # pragma: no cover
         worker_names = ObjectParser.GetObjectNames(LoadBalancer.workers.values(), checkbox_data=True)
+        if not worker_names:
+            return
+
         questions = [
             {
                 'type': 'checkbox',
@@ -194,18 +199,17 @@ class Writer:
         for worker in answers['statuses']:
             workers.append(ObjectParser.GetClassObjectByName(LoadBalancer.workers.values(), worker))
 
-        self.__UpdateWorkerStates(workers)
+        self.UpdateWorkerStates(workers)
 
-    @staticmethod
-    def __UpdateWorkerStates(statuses):
+    def UpdateWorkerStates(self, statuses):
         for worker in LoadBalancer.workers.values():
             if worker in statuses:
                 worker.SwitchState()
 
-    def __Close(self):
+    def Close(self):
         self.active = False
 
-    def __ExecuteCleanMethod(self, method):
+    def ExecuteCleanMethod(self, method):
         os.system('cls' if os.name == 'nt' else 'clear')
         try:
             method()
