@@ -1,8 +1,9 @@
-from modules.system_handler import SystemHandler
+from constants.handler import system_handler
 
 
 def main():
-    SystemHandler.Execute()
+    while True:
+        system_handler.Execute()
 
 
 if __name__ == '__main__':

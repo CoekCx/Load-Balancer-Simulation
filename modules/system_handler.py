@@ -3,15 +3,15 @@ import re
 
 from inquirer2 import prompt
 
-from modules.load_balancer import LoadBalancer
-from utils.object_parser import ObjectParser
-from utils.validation import Validate
 from constants.regex import *
 from factories.writer_factory import WriterFactory
 from models.meter import Meter
 from modules.database_analitics import DatabaseAnalytics
+from modules.load_balancer import LoadBalancer
 from modules.worker import Worker
-from utils.color import in_color, Color, print_message, print_error
+from utils.color import print_message, print_error
+from utils.object_parser import ObjectParser
+from utils.validation import Validate
 
 
 class SystemHandler:
@@ -27,15 +27,15 @@ class SystemHandler:
             'Modify meter': self.__ModifyMeter,
             'Delete meter': self.__DeleteMeters,
             'Reports': self.__ReportsPrompt,
-            'City report': self.__GetCityReport,
-            'Meter report': self.__GetMeterReport,
+            'City report': self.GetCityReport,
+            'Meter report': self.GetMeterReport,
             'Quit': self.__Quit,
         }
 
     def Execute(self):
-        self.__ExecuteCleanMethod(self.__UserPrompt)
+        self.ExecuteCleanMethod(self.__UserPrompt)
 
-    def __UserPrompt(self):
+    def __UserPrompt(self):  # pragma: no cover
         choices = ['Write', 'Manage writers', 'Manage database', 'Reports', 'Quit']
         questions = [
             {
@@ -47,9 +47,9 @@ class SystemHandler:
         ]
         answers = prompt.prompt(questions)
 
-        self.__ExecuteCleanMethod(self.__functions[answers['user_input']])
+        self.ExecuteCleanMethod(self.__functions[answers['user_input']])
 
-    def __Write(self):
+    def __Write(self):  # pragma: no cover
         if len(self.writers) == 0:
             print_error('No available writers', clear_screen=True)
             return
@@ -77,7 +77,7 @@ class SystemHandler:
         while writer.active:
             writer.Execute()
 
-    def __ManageWriters(self):
+    def __ManageWriters(self):  # pragma: no cover
         choices = ['...', 'Create writers', 'Destroy writers']
         questions = [
             {
@@ -93,9 +93,9 @@ class SystemHandler:
         if answers['user_input'] == '...':
             return
 
-        self.__ExecuteCleanMethod(self.__functions[answers['user_input']])
+        self.ExecuteCleanMethod(self.__functions[answers['user_input']])
 
-    def __CreateWriters(self):
+    def __CreateWriters(self):  # pragma: no cover
         questions = [
             {
                 'type': 'input',
@@ -113,7 +113,7 @@ class SystemHandler:
         self.writers = dict(sorted(self.writers.items()))
         print_message('Writers created', clear_screen=True)
 
-    def __DestroyWriters(self):
+    def __DestroyWriters(self):  # pragma: no cover
         if self.writers.__len__() == 0:
             print_error('There are no writers to destroy', clear_screen=True)
             return
@@ -136,10 +136,10 @@ class SystemHandler:
         for writer in writer_names_to_destroy:
             writers_to_destroy.append(ObjectParser.GetClassObjectByName(self.writers.values(), writer))
 
-        self.__RemoveWritersFromDictionary(writers_to_destroy)
+        self.RemoveWritersFromDictionary(writers_to_destroy)
         print_message('Writers destroyed', clear_screen=True)
 
-    def __RemoveWritersFromDictionary(self, writers_to_destroy):
+    def RemoveWritersFromDictionary(self, writers_to_destroy):
         removed_writer = False
         for writer in self.writers.values():
             if writer in writers_to_destroy:
@@ -147,16 +147,16 @@ class SystemHandler:
                 removed_writer = True
                 break
         if removed_writer:
-            self.__RemoveWritersFromDictionary(writers_to_destroy)
+            self.RemoveWritersFromDictionary(writers_to_destroy)
 
-    def __ManageDatabase(self):
+    def __ManageDatabase(self):  # pragma: no cover
         choices = ['...', 'Add meter', 'Modify meter', 'Delete meter']
 
         questions = [
             {
                 'type': 'list',
                 'name': 'user_input',
-                'message': f'{in_color("|System>", Color.PURPLE, True)}{in_color(">Database>", Color.YELLOW, True)}',
+                'message': "|System>Database>",
                 'choices': choices,
             }
         ]
@@ -164,10 +164,9 @@ class SystemHandler:
         if answers['user_input'] == '...':
             return
 
-        self.__ExecuteCleanMethod(self.__functions[answers['user_input']])
+        self.ExecuteCleanMethod(self.__functions[answers['user_input']])
 
-    @staticmethod
-    def __AddMeter():
+    def __AddMeter(self):  # pragma: no cover
         worker = LoadBalancer.GetAvailableWorker()
         if not isinstance(worker, Worker):
             return
@@ -202,7 +201,8 @@ class SystemHandler:
                 'type': 'input',
                 'name': 'street_number',
                 'message': 'Street number',
-                'validate': lambda x: True if Validate.ValidateIntValue(x) else 'Invalid street number'
+                'validate': lambda x: True if Validate.ValidateIntValue(x, more_than=True,
+                                                                        limit=0) else 'Invalid street number'
             },
             {
                 'type': 'input',
@@ -214,7 +214,7 @@ class SystemHandler:
                 'type': 'input',
                 'name': 'city',
                 'message': 'City',
-                'validate': lambda x: True if re.match(regex_word, x) else 'Invalid city'
+                'validate': lambda x: True if re.match(regex_words_and_numbers, x) else 'Invalid city'
             }
         ]
         answers = prompt.prompt(questions)
@@ -223,7 +223,7 @@ class SystemHandler:
                       int(answers['street_number']), int(answers['zip_code']), answers['city'])
         worker.ProcessWorkerAction('AddMeter', (meter,))
 
-    def __ModifyMeter(self):
+    def __ModifyMeter(self):  # pragma: no cover
         worker = LoadBalancer.GetAvailableWorker()
         if not isinstance(worker, Worker):
             return
@@ -281,11 +281,11 @@ class SystemHandler:
         ]
         answers = prompt.prompt(questions)
 
-        self.__ParseUpdatedMeter(meter, answers)
+        self.ParseUpdatedMeter(meter, answers)
         worker.ProcessWorkerAction('UpdateMeter', (meter,))
 
     @staticmethod
-    def __ParseUpdatedMeter(meter, data):
+    def ParseUpdatedMeter(meter, data):
         meter.first_name = data['first_name']
         meter.last_name = data['last_name']
         meter.street_name = data['street_name']
@@ -293,8 +293,7 @@ class SystemHandler:
         meter.zip_code = int(data['zip_code'])
         meter.city = data['city']
 
-    @staticmethod
-    def __DeleteMeters():
+    def __DeleteMeters(self):  # pragma: no cover
         worker = LoadBalancer.GetAvailableWorker()
         if not isinstance(worker, Worker):
             return
@@ -319,12 +318,12 @@ class SystemHandler:
         for meter in meters_to_destroy:
             worker.ProcessWorkerAction('DeleteMeter', (meter,))
 
-    def __ReportsPrompt(self):
+    def __ReportsPrompt(self):  # pragma: no cover
         questions = [
             {
                 'type': 'list',
                 'name': 'user_input',
-                'message': f'{in_color("|System>", Color.PURPLE)}{in_color(">Reports>", Color.RED)}',
+                'message': "|System>Reports>",
                 'choices': ['...', 'City report', 'Meter report'],
                 'default': 1
             }
@@ -333,21 +332,19 @@ class SystemHandler:
         if answers['user_input'] == '...':
             return
 
-        self.__ExecuteCleanMethod(self.__functions[answers['user_input']])
+        self.ExecuteCleanMethod(self.__functions[answers['user_input']])
 
-    @staticmethod
-    def __GetCityReport():
+    def GetCityReport(self):
         DatabaseAnalytics.ProvideCityPerMonthReport()
 
-    @staticmethod
-    def __GetMeterReport():
+    def GetMeterReport(self):
         DatabaseAnalytics.ProvideMeterPerMonthReport()
 
     @staticmethod
-    def __Quit():
+    def __Quit():  # pragma: no cover
         exit(0)
 
-    def __ExecuteCleanMethod(self, method):
+    def ExecuteCleanMethod(self, method):
         os.system('cls' if os.name == 'nt' else 'clear')
         try:
             method()
