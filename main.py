@@ -1,5 +1,9 @@
+from constants.handler import system_handler
+
+
 def main():
-    pass
+    while True:
+        system_handler.Execute()
 
 
 if __name__ == '__main__':

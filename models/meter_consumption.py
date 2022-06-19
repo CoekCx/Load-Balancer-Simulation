@@ -2,12 +2,12 @@ from utils.color import in_color, Color
 
 
 class DataPoint:
-    def __init__(self, meter_id, value, month):
+    def __init__(self, meter_id, value, month):  # pragma: no cover
         self.meter_id = meter_id
         self.value = value
         self.month = month
 
-    def __str__(self, show_color=False):
+    def __str__(self, show_color=False):  # pragma: no cover
         if show_color:
             name = f'{in_color("Meter Consumption:", Color.YELLOW, True)}'
             meter_id = f'{in_color("Meter", Color.WHITE, True)}: {in_color(str(self.meter_id), Color.GREEN, True)}'

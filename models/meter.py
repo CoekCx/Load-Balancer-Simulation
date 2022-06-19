@@ -2,7 +2,7 @@ from utils.color import in_color, Color
 
 
 class Meter:
-    def __init__(self, id, first_name, last_name, street_name, street_number, zip_code, city):
+    def __init__(self, id, first_name, last_name, street_name, street_number, zip_code, city):  # pragma: no cover
         self.id = id
         self.first_name = first_name
         self.last_name = last_name
@@ -11,14 +11,14 @@ class Meter:
         self.zip_code = zip_code
         self.city = city
 
-    def __eq__(self, other):
+    def __eq__(self, other):  # pragma: no cover
         if not isinstance(other, Meter):
             return False
         if self.id == other.id:
             return True
         return False
 
-    def __str__(self, show_info=False, show_info_color=False):
+    def __str__(self, show_info=False, show_info_color=False):  # pragma: no cover
         value = ''
         if show_info_color:
             value += in_color(f"Meter {self.id}", Color.GREEN, True)
@@ -38,5 +38,5 @@ class Meter:
             value += f'\t{self.city}'
         else:
             value = f'Meter {self.id}'
-            
+
         return value
