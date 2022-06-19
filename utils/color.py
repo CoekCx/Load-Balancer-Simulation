@@ -16,25 +16,25 @@ class Color(Enum):
     END = '\033[0m'
 
 
-def cursor():
-    print_in_color('> ', Color.DARKCYAN, end='')
+def cursor():  # pragma: no cover
+    print_in_color("> ", Color.DARKCYAN, end='')
 
 
-def print_in_color(text, color, bold=False, end='\n'):
+def print_in_color(text, color, bold=False, end='\n'):  # pragma: no cover
     if bold:
         print(f'{Color.BOLD.value}{color.value}{text}{Color.END.value}', end=end)
     else:
         print(f'{color.value}{text}{Color.END.value}', end=end)
 
 
-def in_color(text, color, bold=False):
+def in_color(text, color, bold=False):  # pragma: no cover
     if bold:
         return f'{Color.BOLD.value}{color.value}{text}{Color.END.value}'
     else:
         return f'{color.value}{text}{Color.END.value}'
 
 
-def print_error(text, clear_screen=True):
+def print_error(text, clear_screen=True):  # pragma: no cover
     if clear_screen:
         os.system('cls' if os.name == 'nt' else 'clear')
     print_in_color(text, Color.RED)
@@ -42,7 +42,7 @@ def print_error(text, clear_screen=True):
     input()
 
 
-def print_message(text, clear_screen=False):
+def print_message(text, clear_screen=False):  # pragma: no cover
     if clear_screen:
         os.system('cls' if os.name == 'nt' else 'clear')
     print_in_color(text, Color.GREEN)
